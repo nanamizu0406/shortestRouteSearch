@@ -176,9 +176,12 @@ bool Field::isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const
 		return result;
 }
 bool Field::searchBetween(const point &p1, const point &p2) const{
-	return false;
-	
+	unsigned y1=p1.second;
+	unsigned y2=p2.second;
 
+	//---ポイントと経路がかぶらないようにするための例外処理---
+	//---最悪やらなくても良い---
+	return false;
 }
 point Field::getList(const unsigned val) const{
 	return this->list.at(val);
@@ -202,11 +205,15 @@ void Search::inits(){
 		while(l<=num){
 			if(k+l>=field.sizeList())
 				break;
+
 			
 			if(field.searchBetween(field.getList(k), field.getList(k+l))){
 				num++;
+				l++;
 				continue;
 			}
+
+
 			
 			this->nodes.at(k).edgesTo.push_back(k+l);
 			this->nodes.at(k+l).edgesTo.push_back(k);
