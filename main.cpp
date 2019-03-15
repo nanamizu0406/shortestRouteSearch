@@ -54,16 +54,16 @@ public:
 	int cost;
 };
 
-class Dijkstra{
+class Search{
 private:
 	std::vector<Node> nodes;
 public:
-	Dijkstra();
-	~Dijkstra();
+	Search();
+	~Search();
 	void inits();
 	double distance(const point& p1, const point& p2) const;
-	unsigned search();
-}dijkstra;
+	unsigned dijkstra();
+}search;
 
 int main(int argc, char* argv[]){
 	field.print();
@@ -173,19 +173,45 @@ unsigned Field::sizeList() const{
 Node::Node():isComfirmNode(false),cost(-1){}
 Node::~Node(){}
 
-Dijkstra::Dijkstra(){}
-Dijkstra::~Dijkstra(){}
-void Dijkstra::inits(){
+Search::Search(){
+	this->inits();
+}
+Search::~Search(){}
+void Search::inits(){
 	this->nodes.resize(field.sizeList());
+	for(int k=0;k<this->nodes.size()-1;k++){
+		int l=1;
+		while(l<=3){
+			this->nodes.at(k).edgesTo.push_back(k+l);
+			this->nodes.at(k+l).edgesTo.push_back(k);
+			l++;
+			if(k+l>=field.sizeList())
+				break;
+		}
+	}
+
 	
 	this->nodes.at(0).cost=0;
 	
+	unsigned num=1;
+	std::cout<<"------------------------"<<std::endl;
+	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& obj){
+			std::cout<<num++<<"|";
+			std::for_each(obj.edgesTo.begin(), obj.edgesTo.end(), [this](auto& val){
+					std::cout<<val+1<<" ";
+					});
+			/*		std::for_each(obj.edgesCost.begin(), obj.edgesCost.end(), [this](auto& score){
+					std::cout<<"("<<score<<") ";
+					});*/
+			std::cout<<std::endl;
+		});
+	std::cout<<"------------------------"<<std::endl;
 }
-double Dijkstra::distance(const point &p1, const point &p2) const{
+double Search::distance(const point &p1, const point &p2) const{
 	return std::abs(std::pow((p1.first-p2.first)*(p1.first-p2.first)
 													 +(p1.second-p2.second)*(p1.second-p2.second), 0.5));
 }
 		
-unsigned Dijkstra::search(){
+unsigned Search::dijkstra(){
 	
 }
