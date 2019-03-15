@@ -6,8 +6,12 @@
 #include<chrono>
 #include<cmath>
 
-using point=std::pair<unsigned, unsigned>;
-class Dijkstra;
+using point=std::pair<int, int>;
+
+point operator+(const point &lhs, const point &rhs){
+	point p = { lhs.first + rhs.first, lhs.second + rhs.second };
+	return p;
+}
 
 void sort(std::vector<point>& vec);
 
@@ -26,8 +30,8 @@ private:
 	};
 	std::vector<std::vector<int>> field;
 	std::vector<point> list;
-	const unsigned wight=20;
-	const unsigned height=30;
+	const unsigned wight=10;
+	const unsigned height=10;
 	const unsigned nodesNum=7;
 	point start;
 	point goal;
@@ -38,6 +42,7 @@ public:
 	~Field();
 	void inits();
 	void print() const;
+	bool isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const;
 	bool searchBetween(const point& p1, const point& p2) const;
 	point getList(const unsigned val) const;
 	unsigned sizeList() const;
@@ -49,9 +54,10 @@ public:
 	Node();
 	~Node();
 	std::vector<int> edgesTo;
-	std::vector<int> edgesCost;
+	std::vector<double> edgesCost;
+	unsigned from;
 	bool isComfirmNode;
-	int cost;
+	double cost;
 };
 
 class Search{
@@ -160,8 +166,19 @@ void Field::print() const{
 		std::cout<<std::endl;
 	}
 }
+bool Field::isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const{
+	  unsigned d;
+    if(x1>x2) {
+        d=x1,x1=x2,x2=d;
+        d=y1,y1=y2,y2=d;
+    }
+    bool result=(x1<=x&&x<=x2&&((y1<=y2&&y1<=y&&y<=y2)||(y1>y2&&y2<=y&&y<=y1))&&(y-y1)*(x2-x1)==(y2-y1)*(x-x1));
+		return result;
+}
 bool Field::searchBetween(const point &p1, const point &p2) const{
+	return false;
 	
+
 }
 point Field::getList(const unsigned val) const{
 	return this->list.at(val);
@@ -170,7 +187,7 @@ unsigned Field::sizeList() const{
 	return this->list.size();
 }
 
-Node::Node():isComfirmNode(false),cost(-1){}
+Node::Node():isComfirmNode(false),cost(-1),from(0){}
 Node::~Node(){}
 
 Search::Search(){
@@ -181,35 +198,54 @@ void Search::inits(){
 	this->nodes.resize(field.sizeList());
 	for(int k=0;k<this->nodes.size()-1;k++){
 		int l=1;
-		while(l<=3){
+		unsigned num=3;
+		while(l<=num){
+			if(k+l>=field.sizeList())
+				break;
+			
+			if(field.searchBetween(field.getList(k), field.getList(k+l))){
+				num++;
+				continue;
+			}
+			
 			this->nodes.at(k).edgesTo.push_back(k+l);
 			this->nodes.at(k+l).edgesTo.push_back(k);
 			l++;
-			if(k+l>=field.sizeList())
-				break;
 		}
 	}
 
-	
+	double score=0;
+	for(int i=0;i<this->nodes.size();i++){
+		for(int j=0;j<this->nodes.at(i).edgesTo.size();j++){
+			score=this->distance(field.getList(i), field.getList(nodes.at(i).edgesTo.at(j)));
+			this->nodes.at(i).edgesCost.push_back(score);
+		}
+	}
 	this->nodes.at(0).cost=0;
 	
-	unsigned num=1;
+	unsigned num1=1;
+	unsigned num2=0;
 	std::cout<<"------------------------"<<std::endl;
-	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& obj){
-			std::cout<<num++<<"|";
-			std::for_each(obj.edgesTo.begin(), obj.edgesTo.end(), [this](auto& val){
+	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& node){
+			std::cout<<num1++<<"|";
+			std::for_each(node.edgesTo.begin(), node.edgesTo.end(), [this](auto& val){
 					std::cout<<val+1<<" ";
 					});
-			/*		std::for_each(obj.edgesCost.begin(), obj.edgesCost.end(), [this](auto& score){
+			num2=7-node.edgesTo.size();
+			for(int k=0;k<num2;k++)
+				std::cout<<"  ";
+			std::cout<<"| ";
+			std::for_each(node.edgesCost.begin(), node.edgesCost.end(), [&,this](auto& score){
+					std::cout<<std::fixed;
 					std::cout<<"("<<score<<") ";
-					});*/
+				});
 			std::cout<<std::endl;
 		});
 	std::cout<<"------------------------"<<std::endl;
 }
 double Search::distance(const point &p1, const point &p2) const{
-	return std::abs(std::pow((p1.first-p2.first)*(p1.first-p2.first)
-													 +(p1.second-p2.second)*(p1.second-p2.second), 0.5));
+	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)
+													 +(p1.second-p2.second)*(p1.second-p2.second));
 }
 		
 unsigned Search::dijkstra(){
