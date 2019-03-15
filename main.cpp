@@ -2,13 +2,14 @@
 #include<vector>
 #include<algorithm>
 #include<queue>
-#include<utility>
 #include<random>
 #include<chrono>
 #include<cmath>
 
 using point=std::pair<unsigned, unsigned>;
 class Dijkstra;
+
+void sort(std::vector<point>& vec);
 
 class Timer{
 private:
@@ -33,12 +34,13 @@ private:
 private:
 	point random() const;
 public:
-	friend Dijkstra;
-public:
 	Field();
 	~Field();
 	void inits();
 	void print() const;
+	bool searchBetween(const point& p1, const point& p2) const;
+	point getList(const unsigned val) const;
+	unsigned sizeList() const;
 }field;
 
 class Node{
@@ -68,6 +70,19 @@ int main(int argc, char* argv[]){
 	return 0;
 }
 
+void sort(std::vector<point>& vec){
+	point temp;
+	for(int i=0;i<vec.size()-1;i++){
+		for(int j=vec.size()-1;j>i;j--){
+			if(vec.at(j-1).second>vec.at(j).second){
+				temp=vec.at(j-1);
+				vec.at(j-1)=vec.at(j);
+				vec.at(j)=temp;
+			}
+		}
+	}
+}
+
 Field::Field(){
 	this->inits();
 }
@@ -94,12 +109,11 @@ void Field::inits(){
 	this->start=std::make_pair(0, 0);
 	this->goal=std::make_pair(this->wight-1, this->height-1);
 	
-	std::cout<<"S("<<this->start.first+1<<","<<this->start.second+1<<") ";
-	std::cout<<"G("<<this->goal.first+1<<","<<this->goal.second+1<<") ";
 	this->field.at(this->start.second).at(this->start.first)=START;
 	this->field.at(this->goal.second).at(this->goal.first)=GOAL;
 	
 	this->list.push_back(this->start);
+	this->list.push_back(this->goal);
 	
 	for(int k=0;k<this->nodesNum;){
 		point obj=this->random();
@@ -112,13 +126,16 @@ void Field::inits(){
 								 &&itr3==this->field.at(obj.second).end());
 		if(!result)
 			continue;
-		std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") ";
 		this->field.at(obj.second).at(obj.first)=POINT;
 		this->list.push_back(obj);
 		k++;
 	}
+
+	sort(this->list);
+	std::for_each(this->list.begin(), this->list.end(), [this](auto obj){
+			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") ";
+		});
 	std::cout<<std::endl;
-	this->list.push_back(this->goal);
 }
 void Field::print() const{
 	for(int i=0;i<this->field.size();i++){
@@ -143,6 +160,15 @@ void Field::print() const{
 		std::cout<<std::endl;
 	}
 }
+bool Field::searchBetween(const point &p1, const point &p2) const{
+	
+}
+point Field::getList(const unsigned val) const{
+	return this->list.at(val);
+}
+unsigned Field::sizeList() const{
+	return this->list.size();
+}
 
 Node::Node():isComfirmNode(false),cost(-1){}
 Node::~Node(){}
@@ -150,10 +176,14 @@ Node::~Node(){}
 Dijkstra::Dijkstra(){}
 Dijkstra::~Dijkstra(){}
 void Dijkstra::inits(){
+	this->nodes.resize(field.sizeList());
+	
+	this->nodes.at(0).cost=0;
 	
 }
 double Dijkstra::distance(const point &p1, const point &p2) const{
-	return std::abs(std::pow((p1.first-p2.first)*(p1.first-p2.first)+(p1.second-p2.second)*(p1.second-p2.second), 0.5));
+	return std::abs(std::pow((p1.first-p2.first)*(p1.first-p2.first)
+													 +(p1.second-p2.second)*(p1.second-p2.second), 0.5));
 }
 		
 unsigned Dijkstra::search(){
