@@ -5,6 +5,12 @@
 #include<random>
 #include<chrono>
 #include<cmath>
+#include<GL/glut.h>
+
+void inits();
+void resize(int w, int h);
+void keyboard(unsigned char key, int x, int y);
+void display();
 
 using point=std::pair<int, int>;
 
@@ -17,7 +23,12 @@ void sort(std::vector<point>& vec);
 
 class Timer{
 private:
+	std::chrono::system_clock::time_point start;
+	std::chrono::system_clock::time_point end;
 public:
+	void begin();
+	void stop();
+	void disp();
 };
 
 class Field{
@@ -83,7 +94,50 @@ int main(int argc, char* argv[]){
 	search.inits();
 	search.dijkstra();
 	search.printNode();
+	glutInit(&argc, argv);
+	glutCreateWindow("search_route");
+	inits();
+	glutReshapeFunc(resize);
+	glutKeyboardFunc(keyboard);
+	glutDisplayFunc(display);
+	glutMainLoop();
 	return 0;
+}
+
+void inits(){
+	static const unsigned WindowSizeWight=800;
+	static const unsigned WindowSizeHeight=800;
+
+	static const unsigned WindowPossitionWight=100;
+	static const unsigned WindowPossitionHeight=100;
+
+	gluOrtho2D(0, 100, 100, 0);
+	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGBA|GLUT_DOUBLE);
+	glutInitWindowPosition(WindowPossitionWight, WindowPossitionHeight);
+	glutInitWindowSize(WindowSizeWight, WindowSizeHeight);
+
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+}
+void resize(int w, int h){
+	glViewport(0, 0, w, h);
+	glLoadIdentity();
+	glOrtho(-0.5, (GLdouble)w-0.5, (GLdouble)h-0.1, -0.5, -1.0, 1.0);
+}
+void keyboard(unsigned char key, int x, int y){
+	switch(key){
+	case 'q':
+	case 'Q':
+	case '\033':
+		std::exit(0);
+		break;
+	default:
+		break;
+	}
+}
+void display(){
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glutSwapBuffers();
+	glFlush();
 }
 
 void sort(std::vector<point>& vec){
@@ -312,3 +366,5 @@ void Search::printCost() const{
 		});
 	std::cout<<"-------------------------------"<<std::endl;
 }
+
+
