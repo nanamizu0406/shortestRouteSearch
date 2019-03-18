@@ -42,6 +42,7 @@ public:
 	~Field();
 	void inits();
 	void print() const;
+	void printPointCoord() const;
 	bool isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const;
 	bool searchBetween(const point& p1, const point& p2) const;
 	point getList(const unsigned val) const;
@@ -55,6 +56,7 @@ public:
 	~Node();
 	std::vector<int> edgesTo;
 	std::vector<double> edgesCost;
+	unsigned id;
 	unsigned from;
 	bool isComfirmNode;
 	double cost;
@@ -63,16 +65,21 @@ public:
 class Search{
 private:
 	std::vector<Node> nodes;
+	static const unsigned branch=3;
 public:
 	Search();
 	~Search();
 	void inits();
 	double distance(const point& p1, const point& p2) const;
-	unsigned dijkstra();
+	void dijkstra();
+	void printNode();
 }search;
 
 int main(int argc, char* argv[]){
 	field.print();
+	//	search.inits();
+	search.dijkstra();
+	search.printNode();
 	return 0;
 }
 
@@ -138,10 +145,10 @@ void Field::inits(){
 	}
 
 	sort(this->list);
-	std::for_each(this->list.begin(), this->list.end(), [this](auto obj){
+	/*	std::for_each(this->list.begin(), this->list.end(), [this](auto obj){
 			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") ";
 		});
-	std::cout<<std::endl;
+		std::cout<<std::endl;*/
 }
 void Field::print() const{
 	for(int i=0;i<this->field.size();i++){
@@ -165,6 +172,12 @@ void Field::print() const{
 		}
 		std::cout<<std::endl;
 	}
+}
+void Field::printPointCoord() const{
+	std::for_each(this->list.begin(), this->list.end(), [this](auto obj){;
+			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") ";
+		});
+	std::cout<<std::endl;
 }
 bool Field::isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const{
 	  unsigned d;
@@ -198,23 +211,19 @@ Search::Search(){
 }
 Search::~Search(){}
 void Search::inits(){
+	this->nodes.clear();
 	this->nodes.resize(field.sizeList());
+	for(int i=0;i<this->nodes.size();i++){
+		nodes.at(i).id=i;
+	}
 	for(int k=0;k<this->nodes.size()-1;k++){
 		int l=1;
-		unsigned num=3;
-		while(l<=num){
+		while(l<=branch){
 			if(k+l>=field.sizeList())
 				break;
-
-			
-			if(field.searchBetween(field.getList(k), field.getList(k+l))){
-				num++;
-				l++;
-				continue;
-			}
-
-
-			
+			/*
+     	---ポイントと経路がかぶらないようにするための例外処理---
+			*/
 			this->nodes.at(k).edgesTo.push_back(k+l);
 			this->nodes.at(k+l).edgesTo.push_back(k);
 			l++;
@@ -230,16 +239,14 @@ void Search::inits(){
 	}
 	this->nodes.at(0).cost=0;
 	
-	unsigned num1=1;
-	unsigned num2=0;
+	unsigned num=1;
 	std::cout<<"------------------------"<<std::endl;
 	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& node){
-			std::cout<<num1++<<"|";
+			std::cout<<num++<<"|";
 			std::for_each(node.edgesTo.begin(), node.edgesTo.end(), [this](auto& val){
 					std::cout<<val+1<<" ";
 					});
-			num2=7-node.edgesTo.size();
-			for(int k=0;k<num2;k++)
+			for(int k=0;k<field.sizeList()-2-node.edgesTo.size();k++)
 				std::cout<<"  ";
 			std::cout<<"| ";
 			std::for_each(node.edgesCost.begin(), node.edgesCost.end(), [&,this](auto& score){
@@ -254,7 +261,49 @@ double Search::distance(const point &p1, const point &p2) const{
 	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)
 													 +(p1.second-p2.second)*(p1.second-p2.second));
 }
+void Search::dijkstra(){
+	while(true){
+		int process=-1;
+		for(int i=0;i<this->nodes.size();i++){
+			if(this->nodes.at(i).isComfirmNode||this->nodes.at(i).cost<0)
+				continue;
+			if(process==-1){
+				process=this->nodes.at(i).id;
+				continue;
+			}
+			if(this->nodes.at(i).cost<this->nodes.at(process).cost){
+				process=this->nodes.at(i).id;
+			}
+		}
 		
-unsigned Search::dijkstra(){
-	
+		if(process==-1)
+			break;
+		
+		this->nodes.at(process).isComfirmNode=true;
+		
+		for(int i=0;i<this->nodes.at(process).edgesTo.size();i++){
+			unsigned id=this->nodes.at(process).edgesTo.at(i);
+			double cost=this->nodes.at(process).cost+this->nodes.at(process).edgesCost.at(i);
+			if(this->nodes.at(id).cost<0||this->nodes.at(process).edgesCost.at(i)>cost){
+				this->nodes.at(id).cost=cost;
+				this->nodes.at(id).from=this->nodes.at(process).id;
+			}
+		}
+	}
 }
+void Search::printNode(){
+	std::vector<unsigned> log;
+	log.push_back(this->nodes.at(this->nodes.size()-1).id);
+	unsigned from=this->nodes.at(this->nodes.size()-1).from;
+	while(true){
+		log.push_back(from);		
+		if(from==0)
+			break;
+		from=this->nodes.at(from).from;
+	}
+	std::reverse(log.begin(), log.end());
+	std::for_each(log.begin(), log.end(), [](auto& val){
+			std::cout<<val+1<<" ";
+		});
+	std::cout<<std::endl;
+}	
