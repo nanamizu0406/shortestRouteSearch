@@ -72,12 +72,15 @@ public:
 	void inits();
 	double distance(const point& p1, const point& p2) const;
 	void dijkstra();
-	void printNode();
+	void printNode() const;
+	void printCost() const;
 }search;
 
 int main(int argc, char* argv[]){
+	//	search.printCost();
+	//	field.printPointCoord();
 	field.print();
-	//	search.inits();
+	search.inits();
 	search.dijkstra();
 	search.printNode();
 	return 0;
@@ -111,7 +114,9 @@ point Field::random() const{
 	return random;
 }
 void Field::inits(){
+	this->field.clear();
 	this->field.resize(this->height);
+	
 	std::for_each(this->field.begin(), this->field.end(), [this](auto& vec){
 			vec.resize(this->wight);
 		});
@@ -143,12 +148,7 @@ void Field::inits(){
 		this->list.push_back(obj);
 		k++;
 	}
-
 	sort(this->list);
-	/*	std::for_each(this->list.begin(), this->list.end(), [this](auto obj){
-			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") ";
-		});
-		std::cout<<std::endl;*/
 }
 void Field::print() const{
 	for(int i=0;i<this->field.size();i++){
@@ -158,13 +158,19 @@ void Field::print() const{
 				std::cout<<"　";
 				break;
 			case POINT:
-				std::cout<<"＠";				
+				std::cout<<"\x1b[31m";
+				std::cout<<"＠";
+				std::cout<<"\x1b[39m";
 				break;
 			case START:
-				std::cout<<"Ｓ";				
+				std::cout<<"\x1b[34m";
+				std::cout<<"Ｓ";
+				std::cout<<"\x1b[39m";
 				break;
 			case GOAL:
-				std::cout<<"Ｇ";				
+				std::cout<<"\x1b[34m";
+				std::cout<<"Ｇ";
+				std::cout<<"\x1b[39m";				
 				break;
 			default:
 				break;
@@ -189,6 +195,7 @@ bool Field::isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const
 		return result;
 }
 bool Field::searchBetween(const point &p1, const point &p2) const{
+	
 	unsigned y1=p1.second;
 	unsigned y2=p2.second;
 
@@ -238,24 +245,6 @@ void Search::inits(){
 		}
 	}
 	this->nodes.at(0).cost=0;
-	
-	unsigned num=1;
-	std::cout<<"------------------------"<<std::endl;
-	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& node){
-			std::cout<<num++<<"|";
-			std::for_each(node.edgesTo.begin(), node.edgesTo.end(), [this](auto& val){
-					std::cout<<val+1<<" ";
-					});
-			for(int k=0;k<field.sizeList()-2-node.edgesTo.size();k++)
-				std::cout<<"  ";
-			std::cout<<"| ";
-			std::for_each(node.edgesCost.begin(), node.edgesCost.end(), [&,this](auto& score){
-					std::cout<<std::fixed;
-					std::cout<<"("<<score<<") ";
-				});
-			std::cout<<std::endl;
-		});
-	std::cout<<"------------------------"<<std::endl;
 }
 double Search::distance(const point &p1, const point &p2) const{
 	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)
@@ -274,13 +263,10 @@ void Search::dijkstra(){
 			if(this->nodes.at(i).cost<this->nodes.at(process).cost){
 				process=this->nodes.at(i).id;
 			}
-		}
-		
+		}	
 		if(process==-1)
 			break;
-		
 		this->nodes.at(process).isComfirmNode=true;
-		
 		for(int i=0;i<this->nodes.at(process).edgesTo.size();i++){
 			unsigned id=this->nodes.at(process).edgesTo.at(i);
 			double cost=this->nodes.at(process).cost+this->nodes.at(process).edgesCost.at(i);
@@ -291,7 +277,7 @@ void Search::dijkstra(){
 		}
 	}
 }
-void Search::printNode(){
+void Search::printNode() const{
 	std::vector<unsigned> log;
 	log.push_back(this->nodes.at(this->nodes.size()-1).id);
 	unsigned from=this->nodes.at(this->nodes.size()-1).from;
@@ -303,7 +289,28 @@ void Search::printNode(){
 	}
 	std::reverse(log.begin(), log.end());
 	std::for_each(log.begin(), log.end(), [](auto& val){
-			std::cout<<val+1<<" ";
+			std::cout<<val+1;
+			point obj=field.getList(val);
+			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") >> ";
 		});
 	std::cout<<std::endl;
-}	
+}
+void Search::printCost() const{
+	unsigned num=1;
+	std::cout<<"-------------------------------"<<std::endl;
+	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& node){
+			std::cout<<num++<<" |";
+			std::for_each(node.edgesTo.begin(), node.edgesTo.end(), [this](auto& val){
+					std::cout<<val+1<<" ";
+					});
+			for(int k=0;k<field.sizeList()-2-node.edgesTo.size();k++)
+				std::cout<<"  ";
+			std::cout<<"| ";
+			std::for_each(node.edgesCost.begin(), node.edgesCost.end(), [&,this](auto& score){
+					std::cout<<std::fixed;
+					std::cout<<"("<<score<<") ";
+				});
+			std::cout<<std::endl;
+		});
+	std::cout<<"-------------------------------"<<std::endl;
+}
