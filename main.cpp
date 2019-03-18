@@ -140,8 +140,7 @@ void Field::inits(){
 		const auto itr1=std::find(this->field.at(obj.second).begin(), this->field.at(obj.second).end(), POINT);
 		const auto itr2=std::find(this->field.at(obj.second).begin(), this->field.at(obj.second).end(), START);
 		const auto itr3=std::find(this->field.at(obj.second).begin(), this->field.at(obj.second).end(), GOAL);
-		bool result=(itr1==this->field.at(obj.second).end()&&itr2==this->field.at(obj.second).end()
-								 &&itr3==this->field.at(obj.second).end());
+		bool result=(itr1==this->field.at(obj.second).end()&&itr2==this->field.at(obj.second).end()&&itr3==this->field.at(obj.second).end());
 		if(!result)
 			continue;
 		this->field.at(obj.second).at(obj.first)=POINT;
@@ -247,8 +246,7 @@ void Search::inits(){
 	this->nodes.at(0).cost=0;
 }
 double Search::distance(const point &p1, const point &p2) const{
-	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)
-													 +(p1.second-p2.second)*(p1.second-p2.second));
+	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)+(p1.second-p2.second)*(p1.second-p2.second));
 }
 void Search::dijkstra(){
 	while(true){
