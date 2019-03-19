@@ -5,6 +5,7 @@
 #include<random>
 #include<chrono>
 #include<cmath>
+#include<queue>
 #include<GL/glut.h>
 
 const unsigned cellSize=20;
@@ -89,21 +90,21 @@ public:
 	void inits();
 	double distance(const point& p1, const point& p2) const;
 	void dijkstra();
+	void queueDijkstra();
 	void glutBranch() const;
 	void printNode() const;
 	void printCost() const;
 }search;
 
 int main(int argc, char* argv[]){	
-	field.inits();
-	search.inits();
-
+	//	field.inits();
+	//	search.inits();
 	//	search.printCost();
 	//	field.printPointCoord();
+	//	timer.begin();
+	//	search.dijkstra();
+	//	timer.stop();
 	
-	timer.begin();
-	search.dijkstra();
-	timer.stop();
 	glutInit(&argc, argv);
 	glutCreateWindow("search_route");
 	inits();
