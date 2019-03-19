@@ -363,10 +363,6 @@ void Search::inits(){
 	this->nodes.clear();
 	this->nodes.resize(field.sizeList());
 	
-	std::for_each(this->nodes.begin(), this->nodes.end(), [this](auto& node){;
-			node.inits();
-		});
-		
 	for(int i=0;i<this->nodes.size();i++){
 		nodes.at(i).id=i;
 	}
@@ -397,7 +393,6 @@ double Search::distance(const point &p1, const point &p2) const{
 	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)+(p1.second-p2.second)*(p1.second-p2.second));
 }
 void Search::dijkstra(){
-	//なんか間違ってるかも
 	while(true){
 		int process=-1;
 		for(int i=0;i<this->nodes.size();i++){
@@ -456,7 +451,7 @@ void Search::glutBranch() const{
 	glPointSize(pointSize);
 	glColor3f(1.0f, 1.0f, 0.0f);
 	glBegin(GL_POINTS);
-	for(int i=0;i<log.size()-1;i++){
+	for(int i=0;i<log.size();i++){
 		unsigned val3=log.at(i);
 		point obj3=field.getList(val3);
 		glVertex2d(val+obj3.first*cellSize, val+obj3.second*cellSize);
