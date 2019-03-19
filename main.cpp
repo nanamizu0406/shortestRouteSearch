@@ -7,6 +7,8 @@
 #include<cmath>
 #include<GL/glut.h>
 
+const unsigned cellSize=20;
+
 void inits();
 void resize(int w, int h);
 void keyboard(unsigned char key, int x, int y);
@@ -28,8 +30,8 @@ private:
 public:
 	void begin();
 	void stop();
-	void disp();
-};
+	void disp() const;
+}timer;
 
 class Field{
 private:
@@ -54,6 +56,8 @@ public:
 	void inits();
 	void print() const;
 	void printPointCoord() const;
+	void glutField() const;
+	void glutPoint() const;
 	bool isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const;
 	bool searchBetween(const point& p1, const point& p2) const;
 	point getList(const unsigned val) const;
@@ -90,10 +94,14 @@ public:
 int main(int argc, char* argv[]){
 	//	search.printCost();
 	//	field.printPointCoord();
-	field.print();
+	//	field.print();
+	field.inits();
 	search.inits();
+	timer.begin();
 	search.dijkstra();
-	search.printNode();
+	timer.stop();
+	//	search.printNode();
+	//	timer.disp();
 	glutInit(&argc, argv);
 	glutCreateWindow("search_route");
 	inits();
@@ -130,14 +138,41 @@ void keyboard(unsigned char key, int x, int y){
 	case '\033':
 		std::exit(0);
 		break;
+	case 'r':
+	case 'R':
+			field.inits();
+			search.inits();
+			timer.begin();
+			search.dijkstra();
+			timer.stop();
+			glutPostRedisplay();
+		break;
 	default:
 		break;
 	}
 }
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	
+	field.print();
+	search.printNode();
+	timer.disp();
+	
+	field.glutField();
+	field.glutPoint();
 	glutSwapBuffers();
 	glFlush();
+}
+
+void Timer::begin(){
+	this->start=std::chrono::system_clock::now();
+}
+void Timer::stop(){
+	this->end=std::chrono::system_clock::now();
+}
+void Timer::disp() const{
+	unsigned val=std::chrono::duration_cast<std::chrono::microseconds>(this->end-this->start).count();
+	std::cout<<val<<"micro"<<std::endl;
 }
 
 void sort(std::vector<point>& vec){
@@ -168,6 +203,7 @@ point Field::random() const{
 	return random;
 }
 void Field::inits(){
+	this->list.clear();
 	this->field.clear();
 	this->field.resize(this->height);
 	
@@ -237,6 +273,47 @@ void Field::printPointCoord() const{
 			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") ";
 		});
 	std::cout<<std::endl;
+}
+void Field::glutField() const{
+	static const unsigned lineSize=1;
+	
+	glColor3f(0.0f, 1.0f, 0.0);
+	glLineWidth(lineSize);
+	glBegin(GL_LINES);
+	for(int i=0;i<=this->wight;i++){
+		glVertex2i(cellSize*i, 0);
+		glVertex2i(cellSize*i, cellSize*this->wight);
+	}
+	for(int j=0;j<=this->height;j++){
+		glVertex2i(0, cellSize*j);
+		glVertex2i(cellSize*this->height, cellSize*j);
+	}
+	glEnd();
+}
+void Field::glutPoint() const{
+	static const double val=cellSize/2;
+	static const unsigned pointSize=19;
+	
+	glPointSize(pointSize);
+	glBegin(GL_POINTS);
+	for(int i=0;i<this->field.size();i++){
+		for(int j=0;j<this->field.at(0).size();j++){
+			switch(this->field.at(i).at(j)){
+			case START:
+			case GOAL:
+				glColor3f(0.0f, 0.0f, 8.0f);
+				glVertex2d(val+cellSize*j, val+cellSize*i);
+				break;
+			case POINT:
+				glColor3f(1.0f, 0.0f, 0.0f);
+				glVertex2d(val+cellSize*j, val+cellSize*i);				
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	glEnd();
 }
 bool Field::isPointOnSegment(int x, int y, int x1, int y1, int x2, int y2) const{
 	  unsigned d;
@@ -340,12 +417,24 @@ void Search::printNode() const{
 		from=this->nodes.at(from).from;
 	}
 	std::reverse(log.begin(), log.end());
-	std::for_each(log.begin(), log.end(), [](auto& val){
-			std::cout<<val+1;
+	std::for_each(log.begin(), log.end(), [&](auto val){
+			if(val==0||val==this->nodes.size()-1){
+				std::cout<<"\x1b[34m";
+				if(val==0){
+					std::cout<<"S";
+				}
+				if(val==this->nodes.size()-1){
+					std::cout<<"G";
+				}			
+				std::cout<<"\x1b[39m";
+			}
+			else
+				std::cout<<val;
 			point obj=field.getList(val);
 			std::cout<<"("<<obj.first+1<<","<<obj.second+1<<") >> ";
 		});
-	std::cout<<std::endl;
+	std::cout<<std::fixed;
+	std::cout<<this->nodes.at(this->nodes.size()-1).cost<<"cost"<<std::endl;
 }
 void Search::printCost() const{
 	unsigned num=1;
