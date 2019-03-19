@@ -75,6 +75,8 @@ public:
 	unsigned from;
 	bool isComfirmNode;
 	double cost;
+public:
+	void inits();
 };
 
 class Search{
@@ -342,8 +344,16 @@ unsigned Field::sizeList() const{
 	return this->list.size();
 }
 
-Node::Node():isComfirmNode(false),cost(-1),from(0){}
+Node::Node():isComfirmNode(false),cost(-1),from(0),id(0){}
 Node::~Node(){}
+void Node::inits(){
+	this->edgesTo.clear();
+	this->edgesCost.clear();
+	this->isComfirmNode=false;
+	this->cost=-1;
+	this->from=0;
+	this->id=0;
+}
 
 Search::Search(){
 	this->inits();
@@ -352,6 +362,11 @@ Search::~Search(){}
 void Search::inits(){
 	this->nodes.clear();
 	this->nodes.resize(field.sizeList());
+	
+	std::for_each(this->nodes.begin(), this->nodes.end(), [this](auto& node){;
+			node.inits();
+		});
+		
 	for(int i=0;i<this->nodes.size();i++){
 		nodes.at(i).id=i;
 	}
@@ -382,6 +397,7 @@ double Search::distance(const point &p1, const point &p2) const{
 	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)+(p1.second-p2.second)*(p1.second-p2.second));
 }
 void Search::dijkstra(){
+	//なんか間違ってるかも
 	while(true){
 		int process=-1;
 		for(int i=0;i<this->nodes.size();i++){
@@ -400,9 +416,9 @@ void Search::dijkstra(){
 		this->nodes.at(process).isComfirmNode=true;
 		for(int i=0;i<this->nodes.at(process).edgesTo.size();i++){
 			unsigned id=this->nodes.at(process).edgesTo.at(i);
-			double cost=this->nodes.at(process).cost+this->nodes.at(process).edgesCost.at(i);
-			if(this->nodes.at(id).cost<0||this->nodes.at(process).edgesCost.at(i)>cost){
-				this->nodes.at(id).cost=cost;
+			double addCost=this->nodes.at(process).cost+this->nodes.at(process).edgesCost.at(i);
+			if(this->nodes.at(id).cost<0||this->nodes.at(id).cost>addCost){
+				this->nodes.at(id).cost=addCost;
 				this->nodes.at(id).from=this->nodes.at(process).id;
 			}
 		}
