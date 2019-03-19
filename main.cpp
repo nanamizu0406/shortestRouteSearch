@@ -87,21 +87,21 @@ public:
 	void inits();
 	double distance(const point& p1, const point& p2) const;
 	void dijkstra();
+	void glutBranch() const;
 	void printNode() const;
 	void printCost() const;
 }search;
 
-int main(int argc, char* argv[]){
-	//	search.printCost();
-	//	field.printPointCoord();
-	//	field.print();
+int main(int argc, char* argv[]){	
 	field.inits();
 	search.inits();
+
+	//	search.printCost();
+	//	field.printPointCoord();
+	
 	timer.begin();
 	search.dijkstra();
 	timer.stop();
-	//	search.printNode();
-	//	timer.disp();
 	glutInit(&argc, argv);
 	glutCreateWindow("search_route");
 	inits();
@@ -160,19 +160,10 @@ void display(){
 	
 	field.glutField();
 	field.glutPoint();
+	search.glutBranch();
+	
 	glutSwapBuffers();
 	glFlush();
-}
-
-void Timer::begin(){
-	this->start=std::chrono::system_clock::now();
-}
-void Timer::stop(){
-	this->end=std::chrono::system_clock::now();
-}
-void Timer::disp() const{
-	unsigned val=std::chrono::duration_cast<std::chrono::microseconds>(this->end-this->start).count();
-	std::cout<<val<<"micro"<<std::endl;
 }
 
 void sort(std::vector<point>& vec){
@@ -186,6 +177,17 @@ void sort(std::vector<point>& vec){
 			}
 		}
 	}
+}
+
+void Timer::begin(){
+	this->start=std::chrono::system_clock::now();
+}
+void Timer::stop(){
+	this->end=std::chrono::system_clock::now();
+}
+void Timer::disp() const{
+	unsigned val=std::chrono::duration_cast<std::chrono::microseconds>(this->end-this->start).count();
+	std::cout<<val<<"micro"<<std::endl;
 }
 
 Field::Field(){
@@ -406,6 +408,45 @@ void Search::dijkstra(){
 		}
 	}
 }
+void Search::glutBranch() const{
+	std::vector<unsigned> log;
+	log.push_back(this->nodes.at(this->nodes.size()-1).id);
+	unsigned from=this->nodes.at(this->nodes.size()-1).from;
+	while(true){
+		log.push_back(from);		
+		if(from==0)
+			break;
+		from=this->nodes.at(from).from;
+	}
+	std::reverse(log.begin(), log.end());
+
+	static const double val=cellSize/2;
+	static const unsigned lineSize=1;
+	static const unsigned pointSize=10;
+	
+	glLineWidth(lineSize);
+	glColor3f(1.0f, 1.0f, 0.0f);
+	glBegin(GL_LINES);
+	for(int i=0;i<log.size()-1;i++){
+		unsigned val1=log.at(i);
+		point obj1=field.getList(val1);
+		unsigned val2=log.at(i+1);
+		point obj2=field.getList(val2);
+		glVertex2d(val+obj1.first*cellSize, val+obj1.second*cellSize);
+		glVertex2d(val+obj2.first*cellSize, val+obj2.second*cellSize);
+	}
+	glEnd();
+	
+	glPointSize(pointSize);
+	glColor3f(1.0f, 1.0f, 0.0f);
+	glBegin(GL_POINTS);
+	for(int i=0;i<log.size()-1;i++){
+		unsigned val3=log.at(i);
+		point obj3=field.getList(val3);
+		glVertex2d(val+obj3.first*cellSize, val+obj3.second*cellSize);
+	}
+	glEnd();
+}
 void Search::printNode() const{
 	std::vector<unsigned> log;
 	log.push_back(this->nodes.at(this->nodes.size()-1).id);
@@ -437,12 +478,12 @@ void Search::printNode() const{
 	std::cout<<this->nodes.at(this->nodes.size()-1).cost<<"cost"<<std::endl;
 }
 void Search::printCost() const{
-	unsigned num=1;
+	unsigned num=0;
 	std::cout<<"-------------------------------"<<std::endl;
 	std::for_each(this->nodes.begin(), this->nodes.end(), [&,this](auto& node){
 			std::cout<<num++<<" |";
 			std::for_each(node.edgesTo.begin(), node.edgesTo.end(), [this](auto& val){
-					std::cout<<val+1<<" ";
+					std::cout<<val<<" ";
 					});
 			for(int k=0;k<field.sizeList()-2-node.edgesTo.size();k++)
 				std::cout<<"  ";
