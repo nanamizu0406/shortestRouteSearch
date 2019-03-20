@@ -23,7 +23,6 @@ point operator+(const point &lhs, const point &rhs){
 }
 
 void sort(std::vector<point>& vec);
-//void find(srd::queue<unsigned>& q, unsigned val);
 
 class Timer{
 private:
@@ -159,10 +158,7 @@ void keyboard(unsigned char key, int x, int y){
 		field.inits();
 		search.inits();
 		timer.begin();
-		
-		//		search.dijkstra();
 		search.queueDijkstra();
-		
 		timer.stop();
 		glutPostRedisplay();
 		std::cout<<std::endl;		
