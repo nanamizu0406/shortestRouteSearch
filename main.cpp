@@ -23,6 +23,7 @@ point operator+(const point &lhs, const point &rhs){
 }
 
 void sort(std::vector<point>& vec);
+//void find(srd::queue<unsigned>& q, unsigned val);
 
 class Timer{
 private:
@@ -44,9 +45,9 @@ private:
 	};
 	std::vector<std::vector<int>> field;
 	std::vector<point> list;
-	const unsigned wight=10;
-	const unsigned height=10;
-	const unsigned nodesNum=7;
+	const unsigned wight=35;
+	const unsigned height=35;
+	const unsigned nodesNum=30;
 	point start;
 	point goal;
 private:
@@ -83,12 +84,13 @@ public:
 class Search{
 private:
 	std::vector<Node> nodes;
-	static const unsigned branch=3;
+	static const unsigned branch=4;
+private:
+	double distance(const point& p1, const point& p2) const;
 public:
 	Search();
 	~Search();
 	void inits();
-	double distance(const point& p1, const point& p2) const;
 	void dijkstra();
 	void queueDijkstra();
 	void glutBranch() const;
@@ -96,7 +98,8 @@ public:
 	void printCost() const;
 }search;
 
-int main(int argc, char* argv[]){	
+int main(int argc, char* argv[]){
+	
 	//	field.inits();
 	//	search.inits();
 	//	search.printCost();
@@ -141,14 +144,28 @@ void keyboard(unsigned char key, int x, int y){
 	case '\033':
 		std::exit(0);
 		break;
-	case 'r':
-	case 'R':
-			field.inits();
-			search.inits();
-			timer.begin();
-			search.dijkstra();
-			timer.stop();
-			glutPostRedisplay();
+	case 'd':
+	case 'D':
+		field.inits();
+		search.inits();
+		timer.begin();
+		search.dijkstra();
+		timer.stop();
+		glutPostRedisplay();
+		std::cout<<std::endl;
+		break;
+	case 'p':
+	case 'P':
+		field.inits();
+		search.inits();
+		timer.begin();
+		
+		//		search.dijkstra();
+		search.queueDijkstra();
+		
+		timer.stop();
+		glutPostRedisplay();
+		std::cout<<std::endl;		
 		break;
 	default:
 		break;
@@ -388,12 +405,13 @@ void Search::inits(){
 			this->nodes.at(i).edgesCost.push_back(score);
 		}
 	}
-	this->nodes.at(0).cost=0;
 }
 double Search::distance(const point &p1, const point &p2) const{
 	return std::sqrt((p1.first-p2.first)*(p1.first-p2.first)+(p1.second-p2.second)*(p1.second-p2.second));
 }
 void Search::dijkstra(){
+	this->nodes.at(0).cost=0;
+	
 	while(true){
 		int process=-1;
 		for(int i=0;i<this->nodes.size();i++){
@@ -416,6 +434,31 @@ void Search::dijkstra(){
 			if(this->nodes.at(id).cost<0||this->nodes.at(id).cost>addCost){
 				this->nodes.at(id).cost=addCost;
 				this->nodes.at(id).from=this->nodes.at(process).id;
+			}
+		}
+	}
+}
+void Search::queueDijkstra(){
+	this->nodes.at(0).cost=0;
+	
+	unsigned process;
+	std::vector<unsigned> q;
+	
+	q.push_back(0);
+	while(!q.empty()){
+		std::sort(q.begin(), q.end());
+		process=q.at(0);
+		q.erase(q.begin());
+		this->nodes.at(process).isComfirmNode=true;
+		for(int i=0;i<this->nodes.at(process).edgesTo.size();i++){
+			unsigned id=this->nodes.at(process).edgesTo.at(i);
+			double addCost=this->nodes.at(process).cost+this->nodes.at(process).edgesCost.at(i);
+			if(this->nodes.at(id).cost<0||this->nodes.at(id).cost>addCost){
+				this->nodes.at(id).cost=addCost;
+				this->nodes.at(id).from=this->nodes.at(process).id;
+				if(std::find(q.begin(), q.end(), this->nodes.at(id).id)==q.end()){
+					q.push_back(this->nodes.at(id).id);
+				}
 			}
 		}
 	}
